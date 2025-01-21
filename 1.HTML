@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Diagnóstico</title>
+    <script>
+        function verificarDiagnostico() {
+            const diagnostico = document.getElementById("diagnostico").value;
+            const actividad = document.getElementById("actividad");
+            const sintoma = document.getElementById("sintoma");
+            const diagnosticoOtro = document.getElementById("diagnosticoOtro");
+            const cantidadMaterial = document.getElementById("cantidadMaterial");
+            const bus = parseInt(document.getElementById("bus").value, 10);
+
+            if (diagnostico === "BAJO NIVEL DE ACEITE" || diagnostico === "BAJO NIVEL DE REFRIGERANTE") {
+                sintoma.value = "BAJO NIVEL POR CONSUMO DE TRABAJO";
+                actividad.value = "SE RELLENO HASTA NIVEL ADECUADO";
+                diagnosticoOtro.style.display = "none";
+                diagnosticoOtro.value = "";
+                cantidadMaterial.value = 1;
+                validarCantidadMaterial();
+
+                if (diagnostico === "BAJO NIVEL DE REFRIGERANTE") {
+                    setTimeout(() => {
+                        document.getElementById("codigoPieza1").value = "22020023001-REFRIGERANTE FLEETGUARD";
+                    }, 100);
+                }
+
+                if (diagnostico === "BAJO NIVEL DE ACEITE") {
+                    if (bus > 42000) {
+                        setTimeout(() => {
+                            document.getElementById("codigoPieza1").value = "22020053005 ACEITE VALVOLINE PREMIUM M74";
+                        }, 100);
+                    } else {
+                        setTimeout(() => {
+                            document.getElementById("codigoPieza1").value = "22020053022 ACEITE VALVOLINE PREMIUM M92";
+                        }, 100);
+                    }
+                }
+
+            } else if (diagnostico === "OTRO") {
+                sintoma.value = "";
+                actividad.value = "";
+                diagnosticoOtro.style.display = "block";
+                cantidadMaterial.value = "";
+                document.getElementById("contenedorMaterial").innerHTML = "";
+            } else {
+                sintoma.value = "";
+                actividad.value = "";
+                diagnosticoOtro.style.display = "none";
+                diagnosticoOtro.value = "";
+                cantidadMaterial.value = 1;
+                validarCantidadMaterial();
+            }
+        }
+
+        function validarCantidadMaterial() {
+            const cantidadMaterial = parseInt(document.getElementById("cantidadMaterial").value, 10);
+            const contenedorMaterial = document.getElementById("contenedorMaterial");
+
+            contenedorMaterial.innerHTML = "";
+
+            if (!isNaN(cantidadMaterial) && cantidadMaterial > 0) {
+                for (let i = 1; i <= cantidadMaterial; i++) {
+                    contenedorMaterial.innerHTML += `
+                        <label for="codigoPieza${i}">Código de Piezas ${i}:</label>
+                        <input type="text" id="codigoPieza${i}" name="codigoPieza${i}" oninput="this.value = this.value.toUpperCase()">
+                        <br><br>
+                        <label for="cantidadPieza${i}">Cantidad ${i}:</label>
+                        <input type="number" id="cantidadPieza${i}" name="cantidadPieza${i}" step="any">
+                        <br><br>
+                    `;
+                }
+            }
+        }
+
+        function validarBus() {
+            const bus = document.getElementById("bus").value;
+            if (bus < 41001 || bus > 42080) {
+                alert("El número de BUS debe estar entre 41001 y 42080.");
+                document.getElementById("bus").value = "";
+            }
+        }
+
+        function validarKm() {
+            const km = document.getElementById("km").value;
+            if (km < 0 || km > 2000000) {
+                alert("El valor de KM debe estar entre 0 y 2,000,000.");
+                document.getElementById("km").value = "";
+            }
+        }
+
+        function validarTrabajadores() {
+            const trabajadores = document.getElementById("trabajadores").value;
+            const campoBajoNivel = document.getElementById("campoBajoNivel");
+
+            campoBajoNivel.innerHTML = "";
+
+            for (let i = 1; i <= trabajadores; i++) {
+                campoBajoNivel.innerHTML += `
+                    <label for="personal${i}">Personal ${i} (PM- seguido de 4 dígitos numéricos):</label>
+                    <input type="text" id="personal${i}" name="personal${i}" pattern="PM-\\d{4}" required oninput="this.value = this.value.toUpperCase()">
+                    <br><br>
+                    <label for="horaInicio${i}">Hora de Inicio del Trabajador ${i}:</label>
+                    <input type="time" id="horaInicio${i}" name="horaInicio${i}" required>
+                    <br><br>
+                    <label for="horaFin${i}">Hora de Fin del Trabajador ${i}:</label>
+                    <input type="time" id="horaFin${i}" name="horaFin${i}" required>
+                    <br><br>
+                `;
+            }
+        }
+
+        function mostrarResumen(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            let resumen = "<h2>Resumen de los Datos Ingresados:</h2><ul>";
+
+            formData.forEach((value, key) => {
+                resumen += `<li><strong>${key}:</strong> ${value}</li>`;
+            });
+
+            resumen += "</ul>";
+
+            const newWindow = window.open();
+            newWindow.document.write(resumen);
+            newWindow.document.close();
+        }
+    </script>
+</head>
+<body>
+
+    <h1>Formulario de Diagnóstico</h1>
+
+    <form action="#" method="POST" onsubmit="mostrarResumen(event)">
+
+        <label for="bus">BUS:</label>
+        <input type="number" id="bus" name="bus" min="41001" max="42080" required onchange="validarBus()">
+        <br><br>
+
+        <label for="especialidad">ESPECIALIDAD:</label>
+        <select id="especialidad" name="especialidad" required>
+            <option value="">Seleccionar especialidad</option>
+            <option value="CARROCERIA INTERNA">CARROCERÍA INTERNA</option>
+            <option value="CARROCERIA EXTERNA">CARROCERÍA EXTERNA</option>
+            <option value="PUERTAS">PUERTAS</option>
+            <option value="FRENOS">FRENOS</option>
+            <option value="MASAS">MASAS</option>
+            <option value="NEUMATICO">NEUMÁTICO</option>
+            <option value="MOTOR">MOTOR</option>
+            <option value="LUBRICACION">LUBRICACIÓN</option>
+            <option value="REFRIGERACION">REFRIGERACIÓN</option>
+            <option value="ADMISION Y ESCAPE">ADMISIÓN Y ESCAPE</option>
+            <option value="CIRCUITO NEUMATICO">CIRCUITO NEUMÁTICO</option>
+            <option value="SUSPENSION Y TORNAMESA">SUSPENSIÓN Y TORNAMESA</option>
+            <option value="DIRECCION">DIRECCIÓN</option>
+            <option value="TRANSMISION">TRANSMISIÓN</option>
+            <option value="CARDAN Y DIFERENCIAL">CARDÁN Y DIFERENCIAL</option>
+        </select>
+        <br><br>
+
+        <label for="diagnostico">DIAGNÓSTICO:</label>
+        <select id="diagnostico" name="diagnostico" onchange="verificarDiagnostico()">
+            <option value="">Seleccionar diagnóstico</option>
+            <option value="BAJO NIVEL DE ACEITE">BAJO NIVEL DE ACEITE</option>
+            <option value="BAJO NIVEL DE REFRIGERANTE">BAJO NIVEL DE REFRIGERANTE</option>
+            <option value="OTRO">OTRO</option>
+        </select>
+        <br><br>
+        <textarea id="diagnosticoOtro" name="diagnosticoOtro" rows="3" cols="50" placeholder="Escriba su diagnóstico" style="display:none;" oninput="this.value = this.value.toUpperCase()"></textarea>
+        <br><br>
+
+        <label for="sintoma">SÍNTOMA:</label>
+        <textarea id="sintoma" name="sintoma" rows="3" cols="50" required oninput="this.value = this.value.toUpperCase()"></textarea>
+        <br><br>
+
+        <label for="actividad">ACTIVIDAD:</label>
+        <textarea id="actividad" name="actividad" rows="4" cols="50" required oninput="this.value = this.value.toUpperCase()"></textarea>
+        <br><br>
+
+        <label for="km">KM:</label>
+        <input type="number" id="km" name="km" max="2000000" required onchange="validarKm()">
+        <br><br>
+
+        <label for="origen">ORIGEN:</label>
+        <select id="origen" name="origen">
+            <option value="AUXILIO MECANICO">AUXILIO MECÁNICO</option>
+            <option value="PREVENTIVO">PREVENTIVO</option>
+            <option value="ALISTAMIENTO">ALISTAMIENTO</option>
+            <option value="CHECKLIST">CHECKLIST</option>
+            <option value="TELEMETRIA">TELEMETRÍA</option>
+            <option value="OTROS">OTROS</option>
+        </select>
+        <br><br>
+
+        <label for="complejidad">COMPLEJIDAD:</label>
+        <select id="complejidad" name="complejidad">
+            <option value="CAMBIO,REMPLAZO">CAMBIO, REMPLAZO</option>
+            <option value="REPARACION">REPARACIÓN</option>
+            <option value="TESTEO">TESTEO</option>
+            <option value="OTROS">OTROS</option>
+        </select>
+        <br><br>
+
+        <label for="trabajadores">CANTIDAD DE TRABAJADORES:</label>
+        <input type="number" id="trabajadores" name="trabajadores" min="1" max="9" required onchange="validarTrabajadores()">
+        <br><br>
+
+        <div id="campoBajoNivel"></div>
+
+        <label for="cantidadMaterial">CANTIDAD DE MATERIAL (opcional):</label>
+        <input type="number" id="cantidadMaterial" name="cantidadMaterial" onchange="validarCantidadMaterial()" step="1">
+        <br><br>
+
+        <div id="contenedorMaterial"></div>
+
+        <button type="submit">Enviar</button>
+
+    </form>
+
+</body>
+</html>
+
